@@ -52,7 +52,10 @@ def get_report(login: str,
                date_range: str = 'LAST_7_DAYS',
                report_type: str = 'CAMPAIGN_PERFORMANCE_REPORT',
                report_name: str = 'Performance report',
-               order_by: str = 'CampaignName') -> List[List[str]]:
+               order_by: str = 'CampaignName',
+               filter_item: List[dict[str, str]] = [{}],
+               goals: List[str] = [],
+               attribution_models: List[str] = []) -> List[List[str]]:
     """
     Получить данные через API запрос в Яндекс Директ
     :param login: логин клиента для агентского аккаунта
@@ -60,8 +63,11 @@ def get_report(login: str,
     :param fieldnames: поля отчета https://yandex.ru/dev/direct/doc/reports/fields.html/
     :param date_range: период для отчета https://yandex.ru/dev/direct/doc/reports/period.html/
     :param report_type: тип отчета https://yandex.ru/dev/direct/doc/reports/type.html/
-    :param report_name:
-    :param order_by:
+    :param report_name: название отчета
+    :param order_by: имена полей (столбцов), по которым требуется отсортировать строки в отчете.
+    :param filter_item: фильтрация https://yandex.ru/dev/direct/doc/reports/filters.html
+    :param goals: идентификаторы целей https://yandex.ru/support/metrica/general/goals.html
+    :param attribution_models: модель атрибуции LC/FC/LSC/LYDC https://yandex.ru/support/direct/statistics/attribution-model.html
     :return:
     """
     api = YandexDirect(
@@ -90,9 +96,12 @@ def get_report(login: str,
                 "OrderBy": [{
                     "Field": order_by
                 }],
+                "Goals": goals,
+                "Filter": filter_item,
                 "ReportName": report_name,
                 "ReportType": report_type,
                 "DateRangeType": date_range,
+                "AttributionModels": attribution_models,
                 "Format": "TSV",
                 "IncludeVAT": "YES",
                 "IncludeDiscount": "YES",
@@ -311,7 +320,7 @@ def str_to_numbers(report_data_df: pd.DataFrame) -> pd.DataFrame:
             report_data_df[col] = report_data_df[col].astype(int)
             report_data_df = report_data_df.replace(0, '--')
         except KeyError:
-            print(f'Столбец {i} не используется')
+            print(f'Столбец {col} не используется')
 
     for col in ['Ctr', 'AvgCpc', 'ConversionRate', 'CostPerConversion', 'Cost']:
         try:
@@ -319,7 +328,7 @@ def str_to_numbers(report_data_df: pd.DataFrame) -> pd.DataFrame:
             report_data_df[col] = report_data_df[col].astype(float)
             report_data_df = report_data_df.replace(0, '--')
         except KeyError:
-            print(f'Столбец {i} не используется')
+            print(f'Столбец {col} не используется')
 
     return report_data_df
 
