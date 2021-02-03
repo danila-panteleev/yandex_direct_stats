@@ -1,6 +1,6 @@
 import pandas as pd
 import datetime as dt
-
+import re
 from string import ascii_uppercase
 
 from tapi_yandex_direct import YandexDirect
@@ -9,12 +9,14 @@ from openpyxl import Workbook
 from openpyxl.styles import Font
 from openpyxl.utils.dataframe import dataframe_to_rows
 
-from typing import List, Tuple
+from typing import List, Tuple, Union
+from decimal import Decimal
+from gspread import Worksheet
 
 
 def report_wrapper(login: str,
                    token: str,
-                   fieldnames: List[str] = ["CampaignName", "Impressions", "Clicks", "Ctr", "AvgCpc", "Cost"],
+                   fieldnames: List[str] = ("CampaignName", "Impressions", "Clicks", "Ctr", "AvgCpc", "Cost"),
                    date_range_api: str = 'LAST_7_DAYS',
                    date_range_int: int = 7,
                    report_type: str = 'CAMPAIGN_PERFORMANCE_REPORT',
@@ -48,12 +50,14 @@ def report_wrapper(login: str,
 
 def get_report(login: str,
                token: str,
-               fieldnames: List[str] = ["CampaignName", "Impressions", "Clicks", "Ctr", "AvgCpc", "Cost"],
-               date_range: str = 'LAST_7_DAYS',
+               fieldnames: List[str] = ("CampaignName", "Impressions", "Clicks", "Ctr", "AvgCpc", "Cost"),
+               date_range: str = 'CUSTOM_DATE',
                report_type: str = 'CAMPAIGN_PERFORMANCE_REPORT',
                report_name: str = 'Performance report',
-               order_by: str = 'CampaignName',
-               filter_item: List[dict[str, str]] = [{}],
+               order_by: str = (),
+               filter_item = (),
+               date_from: str = str(dt.date.today() - dt.timedelta(days=7)),
+               date_to: str = str(dt.date.today() - dt.timedelta(days=1)),
                goals: List[str] = [],
                attribution_models: List[str] = []) -> List[List[str]]:
     """
@@ -68,6 +72,8 @@ def get_report(login: str,
     :param filter_item: фильтрация https://yandex.ru/dev/direct/doc/reports/filters.html
     :param goals: идентификаторы целей https://yandex.ru/support/metrica/general/goals.html
     :param attribution_models: модель атрибуции LC/FC/LSC/LYDC https://yandex.ru/support/direct/statistics/attribution-model.html
+    :param date_from: начальная дата отчетного периода YYYY-MM-DD
+    :param date_to: конечная дата отчетного периода YYYY-MM-DD
     :return:
     """
     api = YandexDirect(
@@ -91,13 +97,18 @@ def get_report(login: str,
     report_data = api.reports().get(
         data={
             "params": {
-                "SelectionCriteria": {},
+                "SelectionCriteria": {
+                    "Filter": filter_item,
+                    "DateFrom": date_from,
+                    "DateTo": date_to
+                },
+
                 "FieldNames": fieldnames,
                 "OrderBy": [{
-                    "Field": order_by
+                    "Field": order_by,
+                    "SortOrder": "DESCENDING"
                 }],
                 "Goals": goals,
-                "Filter": filter_item,
                 "ReportName": report_name,
                 "ReportType": report_type,
                 "DateRangeType": date_range,
@@ -220,7 +231,7 @@ def font_styling_workbook(report_workbook: Workbook) -> Workbook:
         cell.font = bold_font
 
     # Строка ИТОГО
-    for cell in ws[f'{len(list(ws))-1}']:
+    for cell in ws[f'{len(list(ws)) - 1}']:
         cell.font = bold_font
 
     return report_workbook
@@ -340,7 +351,7 @@ def date_range_exclude_today(date_range: int) -> str:
     yesterday_formatted = yesterday.strftime('%d.%m.%Y')
     date_ago_formatted = date_ago.strftime('%d.%m.%Y')
 
-    return f'{date_ago_formatted} - {yesterday_formatted}'
+    return f'{date_ago_formatted} – {yesterday_formatted}'
 
 
 def report_filename(date_range: int, client_name: str = '') -> str:
@@ -358,3 +369,148 @@ def rename_df_columns(df: pd.DataFrame) -> pd.DataFrame:
                               'ConversionRate': 'Конверсия (%)',
                               'CostPerConversion': 'Цена цели (руб.)',
                               'Cost': 'Стоимость (руб.)'})
+
+
+def add_report_date_to_google_sheet(worksheet: Worksheet,
+                                    days: int = 1,
+                                    start_column: str = 'A',
+                                    end_column: str = 'I'):
+    """
+    Добавить в таблицу Google Sheets период отчета и отформатировать
+    :param worksheet: Лист Google Sheets
+    :param days: кол-во дней в периоде
+    :param start_column: стартовая колонка для объединения ячеек
+    :param end_column: конечная колонка для объединения ячеек
+    :return: None
+    """
+    report_date_range = [date_range_exclude_today(days)]
+    worksheet.append_row(report_date_range)
+    date_range_cell = worksheet.findall(report_date_range[0])[-1].row
+    worksheet.merge_cells(f'{start_column}{date_range_cell}:{end_column}{date_range_cell}')
+    worksheet.format(f'{start_column}{date_range_cell}',
+                     {'horizontalAlignment': 'CENTER',
+                      'textFormat': {'bold': True,
+                                     'fontSize': 14}
+                      }
+                     )
+    return None
+
+
+def add_report_headline_to_google_sheets(worksheet: Worksheet,
+                                         columns: List[str]):
+    """
+    Добавить заголовок таблицы отчета, сделать жирным и отценрировать в ячейках
+    :param worksheet: лист Google Sheets
+    :param columns: названия столбцов
+    :return: None
+    """
+    worksheet.append_row(columns)
+    report_headline_row_index = worksheet.findall(columns[0])[-1].row
+    worksheet.format(f'A{report_headline_row_index}',
+                     {
+                         'textFormat': {'bold': True}
+                     })
+    worksheet.format(f'B{report_headline_row_index}:I{report_headline_row_index}',
+                     {
+                         'textFormat': {'bold': True},
+                         'horizontalAlignment': 'CENTER'
+                     })
+    return None
+
+
+def values_for_total_row(report_data: List[List[str]]) -> dict[str, Union[int, Decimal]]:
+    """
+    Добавить итоговую строку, выделяет жирным, отрцентрировать в строке.
+    Есть столбцы, зависящие от существования других столбцов.
+    :param report_data: данные отчета
+    :param worksheet: лист Google Sheets
+    :return: None
+    """
+    headline = report_data[0]
+    for i in range(len(headline)):
+        conversions_in_headline = bool(re.match(r'Conversions', headline[i]))
+        conversions_rate_in_headline = bool(re.match(r'ConversionRate', headline[i]))
+        cost_per_conversion_in_headline = bool(re.match(r'CostPerConversion', headline[i]))
+        if conversions_in_headline:
+            headline[i] = 'Conversions'
+        if conversions_rate_in_headline:
+            headline[i] = 'ConversionRate'
+        if cost_per_conversion_in_headline:
+            headline[i] = 'CostPerConversion'
+
+    df = pd.DataFrame(report_data[1:], columns=headline)
+    df.replace('--', '', inplace=True)
+    summary = {}
+    if 'Impressions' in df:
+        total_impressions = int(df.Impressions.astype('int64').sum())
+        summary.update({'Impressions': total_impressions})
+    if 'Clicks' in df:
+        total_clicks = int(df.Clicks.astype('int64').sum())
+        summary.update({'Clicks': total_clicks})
+    if 'Ctr' and 'Impressions' and 'Clicks' in df:
+        total_ctr = round(Decimal(total_clicks / total_impressions) * 100, 2)
+        summary.update({'Ctr': total_ctr})
+    if 'Cost' in df:
+        total_cost = Decimal(df.Cost.astype('float64').sum())
+        summary.update({'Cost': total_cost})
+    if 'AvgCpc' and 'Clicks' and 'Cost' in df:
+        total_cpc = round(Decimal(total_cost / total_clicks), 2)
+        summary.update({'AvgCpc': total_cpc})
+    if 'Conversions' in df:
+        total_conversions = int(pd.to_numeric(df.Conversions).sum())
+        summary.update({'Conversions': total_conversions})
+    if 'ConversionRate' and 'Clicks' in df:
+        total_conversion_rate = '--'
+        if total_clicks:
+            total_conversion_rate = round(Decimal(total_conversions / total_clicks) * 100, 2)
+        summary.update({'ConversionRate': total_conversion_rate})
+    if 'CostPerConversion' and 'Cost' in df:
+        total_cost_per_conversion = '--'
+        if total_conversions:
+            total_cost_per_conversion = round(Decimal(total_cost / total_conversions), 2)
+        summary.update({'CostPerConversion': total_cost_per_conversion})
+
+    return summary
+
+
+def format_last_added_report_in_google_sheets(worksheet: Worksheet, prop: str):
+    """
+    Форматирует ячейки отчета в Google Sheets
+    :param worksheet: лист Google Sheets
+    :param prop: опорное значение из первой строки отчета,
+                 рекомендуется одно из значений в заголовка
+    :return:
+    """
+    start_row_index = worksheet.findall(prop)[-1].row
+    end_row_index = worksheet.findall(worksheet.get_all_values()[-1][-1])[-1].row
+    worksheet.format(f'B{start_row_index}:I{end_row_index}',
+                     {
+                         'horizontalAlignment': 'CENTER'
+                     }
+                     )
+    worksheet.format(f'A{start_row_index}:A{end_row_index}',
+                     {
+                         'horizontalAlignment': 'LEFT'
+                     }
+                     )
+    return None
+
+
+def format_summary_row_in_google_sheets(worksheet: Worksheet,
+                                        total_row: List[str],
+                                        start_column: str = 'A',
+                                        end_column: str = 'I') -> None:
+    summary_row_index = worksheet.findall(total_row[0])[-1].row
+    worksheet.format(f'{start_column}{summary_row_index}:{start_column}{summary_row_index}',
+                     {
+                         'horizontalAlignment': 'RIGHT',
+                         'textFormat': {'bold': True}
+                     }
+                     )
+    worksheet.format(f'{ascii_uppercase[ascii_uppercase.index(start_column) + 1]}{summary_row_index}:{end_column}{summary_row_index}',
+                     {
+                         'horizontalAlignment': 'CENTER',
+                         'textFormat': {'bold': True}
+                     }
+                     )
+    return None
