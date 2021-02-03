@@ -38,8 +38,8 @@ if __name__ == '__main__':
                       token=ACCESS_TOKEN,
                       fieldnames=FIELDS,
                       client_name=CLIENT_NAME)
-    eh.email_wrapper(user=EMAIL_USER,
-                     password=EMAIL_PASSWORD,
-                     receiver=RECEIVER,
-                     body=body,
-                     attachments=report_file_path)
+    # eh.email_wrapper(user=EMAIL_USER,
+    #                  password=EMAIL_PASSWORD,
+    #                  receiver=RECEIVER,
+    #                  body=body,
+    #                  attachments=report_file_path)
