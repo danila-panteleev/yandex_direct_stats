@@ -55,6 +55,7 @@ def get_report(login: str,
                report_type: str = 'CAMPAIGN_PERFORMANCE_REPORT',
                report_name: str = 'Performance report',
                order_by: str = (),
+               sort_order: str = "DESCENDING",
                filter_item = (),
                date_from: str = str(dt.date.today() - dt.timedelta(days=7)),
                date_to: str = str(dt.date.today() - dt.timedelta(days=1)),
@@ -62,6 +63,7 @@ def get_report(login: str,
                attribution_models: List[str] = []) -> List[List[str]]:
     """
     Получить данные через API запрос в Яндекс Директ
+    :param sort_order: порядок сортировки ASCENDING - по возрастанию / DESCENDING - по убыванию
     :param login: логин клиента для агентского аккаунта
     :param token: токен аккаунта
     :param fieldnames: поля отчета https://yandex.ru/dev/direct/doc/reports/fields.html/
@@ -102,11 +104,10 @@ def get_report(login: str,
                     "DateFrom": date_from,
                     "DateTo": date_to
                 },
-
                 "FieldNames": fieldnames,
                 "OrderBy": [{
                     "Field": order_by,
-                    "SortOrder": "DESCENDING"
+                    "SortOrder": sort_order
                 }],
                 "Goals": goals,
                 "ReportName": report_name,
@@ -448,27 +449,31 @@ def values_for_total_row(report_data: List[List[str]]) -> dict[str, Union[int, D
         total_clicks = int(df.Clicks.astype('int64').sum())
         summary.update({'Clicks': total_clicks})
     if 'Ctr' and 'Impressions' and 'Clicks' in df:
-        total_ctr = round(Decimal(total_clicks / total_impressions) * 100, 2)
+        total_ctr = round(float(total_clicks / total_impressions) * 100, 2)
         summary.update({'Ctr': total_ctr})
     if 'Cost' in df:
-        total_cost = Decimal(df.Cost.astype('float64').sum())
+        total_cost = float(df.Cost.astype('float64').sum())
         summary.update({'Cost': total_cost})
     if 'AvgCpc' and 'Clicks' and 'Cost' in df:
-        total_cpc = round(Decimal(total_cost / total_clicks), 2)
+        total_cpc = round(float(total_cost / total_clicks), 2)
         summary.update({'AvgCpc': total_cpc})
     if 'Conversions' in df:
         total_conversions = int(pd.to_numeric(df.Conversions).sum())
         summary.update({'Conversions': total_conversions})
-    if 'ConversionRate' and 'Clicks' in df:
-        total_conversion_rate = '--'
-        if total_clicks:
-            total_conversion_rate = round(Decimal(total_conversions / total_clicks) * 100, 2)
-        summary.update({'ConversionRate': total_conversion_rate})
-    if 'CostPerConversion' and 'Cost' in df:
-        total_cost_per_conversion = '--'
-        if total_conversions:
-            total_cost_per_conversion = round(Decimal(total_cost / total_conversions), 2)
-        summary.update({'CostPerConversion': total_cost_per_conversion})
+    if 'Conversions' in df:
+        if 'ConversionRate' in df:
+            if 'Clicks' in df:
+                total_conversion_rate = '--'
+                if total_clicks:
+                    total_conversion_rate = round(float(total_conversions / total_clicks) * 100, 2)
+                summary.update({'ConversionRate': total_conversion_rate})
+    if 'Conversions' in df:
+        if 'CostPerConversion' in df:
+            if 'Cost' in df:
+                total_cost_per_conversion = '--'
+                if total_conversions:
+                    total_cost_per_conversion = round(float(total_cost / total_conversions), 2)
+                summary.update({'CostPerConversion': total_cost_per_conversion})
 
     return summary
 
@@ -507,10 +512,11 @@ def format_summary_row_in_google_sheets(worksheet: Worksheet,
                          'textFormat': {'bold': True}
                      }
                      )
-    worksheet.format(f'{ascii_uppercase[ascii_uppercase.index(start_column) + 1]}{summary_row_index}:{end_column}{summary_row_index}',
-                     {
-                         'horizontalAlignment': 'CENTER',
-                         'textFormat': {'bold': True}
-                     }
-                     )
+    worksheet.format(
+        f'{ascii_uppercase[ascii_uppercase.index(start_column) + 1]}{summary_row_index}:{end_column}{summary_row_index}',
+        {
+            'horizontalAlignment': 'CENTER',
+            'textFormat': {'bold': True}
+        }
+        )
     return None
