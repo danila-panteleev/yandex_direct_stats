@@ -18,6 +18,7 @@ setup(
         'tapi-yandex-direct',
         'pandas',
         'openpyxl',
+        'gspread',
     ],
     classifiers=[
         'License :: OSI Approved :: MIT License',
