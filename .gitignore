@@ -1,5 +1,4 @@
 venv/
 config.yml
 *.xlsx
-clients/
 runner.py
