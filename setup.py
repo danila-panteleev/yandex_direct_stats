@@ -9,7 +9,7 @@ setup(
     author='Danila Panteleev',
     author_email='pont131995@gmail.com',
     url='https://github.com/danila-panteleev/yandex_direct_stats',
-    download_url='https://github.com/danila-panteleev/yandex_direct_stats/archive/refs/tags/0.1.tar.gz',
+    download_url='https://github.com/danila-panteleev/yandex_direct_stats/archive/refs/tags/0.3.tar.gz',
     keywords=['Yandex Direct', 'Яндекс Директ'],
     install_requires=[
         'tapi-yandex-direct',
