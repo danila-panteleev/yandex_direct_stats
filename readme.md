@@ -3,7 +3,7 @@
 1. Создайте папку yandex_direct_stats
 2. Внутри папки ```git clone https://github.com/danila-panteleev/yandex_direct_stats.git```
 3. ```pip install -r requirements.txt``` 
-4. Введите нужные настройки в [config_example.yml](config_example.yml)
+4. Введите нужные настройки в [config_example.yml](yandex_direct_stats/config_example.yml)
 5. Переименуйте config_example.yml в config.yml
 6. Запустите yandex_direct_stats.py
 

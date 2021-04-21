@@ -1,4 +1,4 @@
 venv/
-config.yml
+yandex_direct_stats/config.yml
 *.xlsx
 runner.py

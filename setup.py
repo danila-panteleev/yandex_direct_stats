@@ -1,12 +1,9 @@
 from distutils.core import setup
 
-with open("README.md", "r") as fh:
-    long_description = fh.read()
-
 setup(
     name='yandex_direct_stats',
     packages=['yandex_direct_stats'],
-    version='0.1',
+    version='0.2',
     license='MIT',
     description='Some tools for perform Yandex Direct reports',
     author='Danila Panteleev',
