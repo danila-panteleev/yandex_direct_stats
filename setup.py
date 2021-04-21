@@ -16,6 +16,8 @@ setup(
         'pandas',
         'openpyxl',
         'gspread',
+        'simplejson',
+
     ],
     classifiers=[
         'License :: OSI Approved :: MIT License',
