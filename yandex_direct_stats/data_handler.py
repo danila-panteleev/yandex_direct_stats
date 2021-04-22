@@ -95,31 +95,54 @@ def get_report(login: str,
         # вам нужно указать логин аккаунта для которого будете делать запросы.
         login=login
     )
-
-    report_data = api.reports().get(
-        data={
-            "params": {
-                "SelectionCriteria": {
-                    "Filter": filter_item,
-                    "DateFrom": date_from,
-                    "DateTo": date_to
-                },
-                "FieldNames": fieldnames,
-                "OrderBy": [{
-                    "Field": order_by,
-                    "SortOrder": sort_order
-                }],
-                "Goals": goals,
-                "ReportName": report_name,
-                "ReportType": report_type,
-                "DateRangeType": date_range,
-                "AttributionModels": attribution_models,
-                "Format": "TSV",
-                "IncludeVAT": "YES",
-                "IncludeDiscount": "YES",
+    if date_range == 'CUSTOM_DATE':
+        report_data = api.reports().get(
+            data={
+                "params": {
+                    "SelectionCriteria": {
+                        "Filter": filter_item,
+                        "DateFrom": date_from,
+                        "DateTo": date_to
+                    },
+                    "FieldNames": fieldnames,
+                    "OrderBy": [{
+                        "Field": order_by,
+                        "SortOrder": sort_order
+                    }],
+                    "Goals": goals,
+                    "ReportName": report_name,
+                    "ReportType": report_type,
+                    "DateRangeType": 'CUSTOM_DATE',
+                    "AttributionModels": attribution_models,
+                    "Format": "TSV",
+                    "IncludeVAT": "YES",
+                    "IncludeDiscount": "YES",
+                }
             }
-        }
-    )
+        )
+    else:
+        report_data = api.reports().get(
+            data={
+                "params": {
+                    "SelectionCriteria": {
+                        "Filter": filter_item
+                    },
+                    "FieldNames": fieldnames,
+                    "OrderBy": [{
+                        "Field": order_by,
+                        "SortOrder": sort_order
+                    }],
+                    "Goals": goals,
+                    "ReportName": report_name,
+                    "ReportType": report_type,
+                    "DateRangeType": date_range,
+                    "AttributionModels": attribution_models,
+                    "Format": "TSV",
+                    "IncludeVAT": "YES",
+                    "IncludeDiscount": "YES",
+                }
+            }
+        )
     return report_data().transform()
 
 
