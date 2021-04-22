@@ -9,7 +9,7 @@ from openpyxl import Workbook
 from openpyxl.styles import Font
 from openpyxl.utils.dataframe import dataframe_to_rows
 
-from typing import List, Tuple, Union
+from typing import List, Tuple, Union, Optional
 from decimal import Decimal
 from gspread import Worksheet
 
@@ -368,7 +368,20 @@ def str_to_numbers(report_data_df: pd.DataFrame) -> pd.DataFrame:
     return report_data_df
 
 
-def date_range_exclude_today(date_range: int) -> str:
+def date_range_exclude_today(date_range: Optional[int, str]) -> str:
+
+    if date_range == 'LAST_3_DAYS':
+        date_range = 3
+    elif date_range == 'LAST_7_DAYS':
+        date_range = 7
+    elif date_range == 'LAST_MONTH':
+        current_date = dt.date.today().year, dt.date.today().month, dt.date.today().day
+        last_month_last_day = dt.date(current_date[0], current_date[1], 1) - dt.timedelta(days=1)
+        last_month_first_day = dt.date(last_month_last_day.year, last_month_last_day.month, 1)
+        last_month_first_day_formatted = last_month_first_day.strftime('%d.%m.%Y')
+        last_month_last_day_formatted = last_month_last_day.strftime('%d.%m.%Y')
+        return f'{last_month_first_day_formatted} - {last_month_last_day_formatted}'
+
     yesterday = dt.date.today() - dt.timedelta(days=1)
     date_ago = yesterday - dt.timedelta(days=date_range - 1)
 
