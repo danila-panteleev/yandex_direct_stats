@@ -368,7 +368,7 @@ def str_to_numbers(report_data_df: pd.DataFrame) -> pd.DataFrame:
     return report_data_df
 
 
-def date_range_exclude_today(date_range: Optional[int, str]) -> str:
+def date_range_exclude_today(date_range: Union[int, str]) -> str:
 
     if date_range == 'LAST_3_DAYS':
         date_range = 3
