@@ -261,75 +261,69 @@ def font_styling_workbook(report_workbook: Workbook) -> Workbook:
     return report_workbook
 
 
-def add_total_row(report_data_df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Добавить строку ИТОГО
-    """
+def compute_total_row_from_df_report(report_data_df: pd.DataFrame) -> dict[str, Union[int, float]]:
     total_dict = {}
     for headline in report_data_df.columns:
         total_dict[headline] = ''
     try:
         total_dict['CampaignName'] = ['ИТОГО']
     except NameError:
-        print('Столбец CampaignName не используется')
+        pass
 
     try:
         total_dict['Impressions'] = [sum(list(map(int, report_data_df['Impressions'])))]
     except NameError:
-        print('Столбец Impressions не используется')
+        pass
 
     try:
         total_dict['Clicks'] = [sum(list(map(int, report_data_df['Clicks'])))]
     except NameError:
-        print('Столбец Clicks не используется')
+        pass
 
     try:
         total_dict['Cost'] = [sum(list(map(float, report_data_df['Cost'])))]
     except NameError:
-        print('Столбец Cost не используется')
+        pass
 
     try:
         total_dict['Ctr'] = [f"{total_dict['Clicks'][0] * 100 / total_dict['Impressions'][0]:.2f}"]
     except NameError:
-        print('Столбец Ctr не используется')
+        pass
     except ZeroDivisionError:
         total_dict['Ctr'] = '0'
 
     try:
         total_dict['AvgCpc'] = [f"{total_dict['Cost'][0] / total_dict['Clicks'][0]:.2f}"]
     except NameError:
-        print('Столбец AvgCpc не используется')
+        pass
     except ZeroDivisionError:
         total_dict['AvgCpc'] = '0'
 
     try:
         conversions_not_null = list(filter(lambda x: x != '--', report_data_df['Conversions']))
     except KeyError:
-        print('Столбец Conversions не используется')
+        pass
 
     try:
         total_dict['Conversions'] = [sum(list(map(int, conversions_not_null)))]
     except NameError:
-        print('Столбец Conversions не используется')
+        pass
 
     try:
         total_dict['ConversionRate'] = [f"{total_dict['Conversions'][0] * 100 / total_dict['Clicks'][0]:.2f}"]
     except NameError:
-        print('Столбец ConversionRate не используется')
+        pass
     except ZeroDivisionError:
         total_dict['ConversionRate'] = '0'
 
     try:
         total_dict['CostPerConversion'] = [f"{total_dict['Cost'][0] / total_dict['Conversions'][0]:.2f}"]
     except NameError:
-        print('Столбец CostPerConversion не используется')
+        pass
     except ZeroDivisionError:
         total_dict['CostPerConversion'] = '0'
 
-    df_total = pd.DataFrame.from_dict(total_dict)
-    report_data_df = report_data_df.append(df_total)
-    print(report_data_df)
-    return report_data_df
+    return total_dict
 
 
 def add_report_description(report_workbook: Workbook,
@@ -463,53 +457,11 @@ def values_for_total_row(report_data: List[List[str]]) -> dict[str, Union[int, D
     :param worksheet: лист Google Sheets
     :return: None
     """
-    headline = report_data[0]
-    for i in range(len(headline)):
-        conversions_in_headline = bool(re.match(r'Conversions', headline[i]))
-        conversions_rate_in_headline = bool(re.match(r'ConversionRate', headline[i]))
-        cost_per_conversion_in_headline = bool(re.match(r'CostPerConversion', headline[i]))
-        if conversions_in_headline:
-            headline[i] = 'Conversions'
-        if conversions_rate_in_headline:
-            headline[i] = 'ConversionRate'
-        if cost_per_conversion_in_headline:
-            headline[i] = 'CostPerConversion'
+    headline, report_body = report_data[0], report_data[1:]
 
-    df = pd.DataFrame(report_data[1:], columns=headline)
+    df = pd.DataFrame(report_body, columns=headline)
     df.replace('--', '', inplace=True)
-    summary = {}
-    if 'Impressions' in df:
-        total_impressions = int(df.Impressions.astype('int64').sum())
-        summary.update({'Impressions': total_impressions})
-    if 'Clicks' in df:
-        total_clicks = int(df.Clicks.astype('int64').sum())
-        summary.update({'Clicks': total_clicks})
-    if 'Ctr' and 'Impressions' and 'Clicks' in df:
-        total_ctr = round(float(total_clicks / total_impressions) * 100, 2)
-        summary.update({'Ctr': total_ctr})
-    if 'Cost' in df:
-        total_cost = float(df.Cost.astype('float64').sum())
-        summary.update({'Cost': total_cost})
-    if 'AvgCpc' and 'Clicks' and 'Cost' in df:
-        total_cpc = round(float(total_cost / total_clicks), 2)
-        summary.update({'AvgCpc': total_cpc})
-    if 'Conversions' in df:
-        total_conversions = int(pd.to_numeric(df.Conversions).sum())
-        summary.update({'Conversions': total_conversions})
-    if 'Conversions' in df:
-        if 'ConversionRate' in df:
-            if 'Clicks' in df:
-                total_conversion_rate = '--'
-                if total_clicks:
-                    total_conversion_rate = round(float(total_conversions / total_clicks) * 100, 2)
-                summary.update({'ConversionRate': total_conversion_rate})
-    if 'Conversions' in df:
-        if 'CostPerConversion' in df:
-            if 'Cost' in df:
-                total_cost_per_conversion = '--'
-                if total_conversions:
-                    total_cost_per_conversion = round(float(total_cost / total_conversions), 2)
-                summary.update({'CostPerConversion': total_cost_per_conversion})
+    summary = dict(compute_total_row_from_df_report(df))
 
     return summary
 
