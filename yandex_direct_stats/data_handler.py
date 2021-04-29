@@ -267,34 +267,34 @@ def compute_total_row_from_df_report(report_data_df: pd.DataFrame) -> dict[str, 
         total_dict[headline] = ''
     try:
         total_dict['CampaignName'] = ['ИТОГО']
-    except NameError:
+    except KeyError:
         pass
 
     try:
         total_dict['Impressions'] = [sum(list(map(int, report_data_df['Impressions'])))]
-    except NameError:
+    except KeyError:
         pass
 
     try:
         total_dict['Clicks'] = [sum(list(map(int, report_data_df['Clicks'])))]
-    except NameError:
+    except KeyError:
         pass
 
     try:
         total_dict['Cost'] = [sum(list(map(float, report_data_df['Cost'])))]
-    except NameError:
+    except KeyError:
         pass
 
     try:
         total_dict['Ctr'] = [f"{total_dict['Clicks'][0] * 100 / total_dict['Impressions'][0]:.2f}"]
-    except NameError:
+    except KeyError:
         pass
     except ZeroDivisionError:
         total_dict['Ctr'] = '0'
 
     try:
         total_dict['AvgCpc'] = [f"{total_dict['Cost'][0] / total_dict['Clicks'][0]:.2f}"]
-    except NameError:
+    except KeyError:
         pass
     except ZeroDivisionError:
         total_dict['AvgCpc'] = '0'
@@ -306,19 +306,19 @@ def compute_total_row_from_df_report(report_data_df: pd.DataFrame) -> dict[str, 
 
     try:
         total_dict['Conversions'] = [sum(list(map(int, conversions_not_null)))]
-    except NameError:
+    except KeyError:
         pass
 
     try:
         total_dict['ConversionRate'] = [f"{total_dict['Conversions'][0] * 100 / total_dict['Clicks'][0]:.2f}"]
-    except NameError:
+    except KeyError:
         pass
     except ZeroDivisionError:
         total_dict['ConversionRate'] = '0'
 
     try:
         total_dict['CostPerConversion'] = [f"{total_dict['Cost'][0] / total_dict['Conversions'][0]:.2f}"]
-    except NameError:
+    except KeyError:
         pass
     except ZeroDivisionError:
         total_dict['CostPerConversion'] = '0'
