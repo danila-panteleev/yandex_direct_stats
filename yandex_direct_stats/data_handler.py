@@ -286,14 +286,14 @@ def compute_total_row_from_df_report(report_data_df: pd.DataFrame) -> dict[str, 
         pass
 
     try:
-        total_dict['Ctr'] = f"{total_dict['Clicks'][0] * 100 / total_dict['Impressions'][0]:.2f}"
+        total_dict['Ctr'] = f"{total_dict['Clicks'] * 100 / total_dict['Impressions']:.2f}"
     except KeyError:
         pass
     except ZeroDivisionError:
         total_dict['Ctr'] = '--'
 
     try:
-        total_dict['AvgCpc'] = f"{total_dict['Cost'][0] / total_dict['Clicks'][0]:.2f}"
+        total_dict['AvgCpc'] = f"{total_dict['Cost'] / total_dict['Clicks']:.2f}"
     except KeyError:
         pass
     except ZeroDivisionError:
@@ -306,14 +306,14 @@ def compute_total_row_from_df_report(report_data_df: pd.DataFrame) -> dict[str, 
         pass
 
     try:
-        total_dict['ConversionRate'] = f"{total_dict['Conversions'][0] * 100 / total_dict['Clicks'][0]:.2f}"
+        total_dict['ConversionRate'] = f"{total_dict['Conversions'] * 100 / total_dict['Clicks']:.2f}"
     except KeyError:
         pass
     except ZeroDivisionError:
         total_dict['ConversionRate'] = '--'
 
     try:
-        total_dict['CostPerConversion'] = f"{total_dict['Cost'][0] / total_dict['Conversions'][0]:.2f}"
+        total_dict['CostPerConversion'] = f"{total_dict['Cost'] / total_dict['Conversions']:.2f}"
     except KeyError:
         pass
     except ZeroDivisionError:
