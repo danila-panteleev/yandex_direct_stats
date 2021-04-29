@@ -301,10 +301,6 @@ def compute_total_row_from_df_report(report_data_df: pd.DataFrame) -> dict[str, 
 
     try:
         conversions_not_null = list(filter(lambda x: x != '--', report_data_df['Conversions']))
-    except KeyError:
-        pass
-
-    try:
         total_dict['Conversions'] = [sum(list(map(int, conversions_not_null)))]
     except KeyError:
         pass
