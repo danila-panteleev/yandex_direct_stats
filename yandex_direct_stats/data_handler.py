@@ -271,32 +271,39 @@ def compute_total_row_from_df_report(report_data_df: pd.DataFrame) -> dict[str, 
         pass
 
     try:
-        total_dict['Impressions'] = sum(list(map(int, report_data_df['Impressions'])))
+        impressions_not_null = list(filter(lambda x: x != '--', report_data_df['Impressions']))
+        total_dict['Impressions'] = sum(list(map(int, impressions_not_null)))
     except KeyError:
         pass
 
     try:
-        total_dict['Clicks'] = sum(list(map(int, report_data_df['Clicks'])))
+        clicks_not_null = list(filter(lambda x: x != '--', report_data_df['Clicks']))
+        total_dict['Clicks'] = sum(list(map(int, clicks_not_null)))
     except KeyError:
         pass
 
     try:
-        total_dict['Cost'] = sum(list(map(float, report_data_df['Cost'])))
+        cost_not_null = list(filter(lambda x: x != '--', report_data_df['Cost']))
+        total_dict['Cost'] = sum(list(map(float, cost_not_null)))
     except KeyError:
         pass
 
     try:
-        total_dict['Ctr'] = f"{total_dict['Clicks'] * 100 / total_dict['Impressions']:.2f}"
+        clicks_not_null = list(filter(lambda x: x != '--', report_data_df['Clicks']))
+        impressions_not_null = list(filter(lambda x: x != '--', report_data_df['Impressions']))
+        total_dict['Ctr'] = f"{clicks_not_null * 100 / impressions_not_null:.2f}"
     except KeyError:
         pass
-    except (ZeroDivisionError, TypeError):
+    except ZeroDivisionError:
         total_dict['Ctr'] = '--'
 
     try:
-        total_dict['AvgCpc'] = f"{total_dict['Cost'] / total_dict['Clicks']:.2f}"
+        cost_not_null = list(filter(lambda x: x != '--', report_data_df['Cost']))
+        clicks_not_null = list(filter(lambda x: x != '--', report_data_df['Clicks']))
+        total_dict['AvgCpc'] = f"{cost_not_null / clicks_not_null:.2f}"
     except KeyError:
         pass
-    except (ZeroDivisionError, TypeError):
+    except ZeroDivisionError:
         total_dict['AvgCpc'] = '--'
 
     try:
@@ -308,17 +315,21 @@ def compute_total_row_from_df_report(report_data_df: pd.DataFrame) -> dict[str, 
         total_dict['Conversions'] = '0'
 
     try:
-        total_dict['ConversionRate'] = f"{total_dict['Conversions'] * 100 / total_dict['Clicks']:.2f}"
+        conversions_not_null = list(filter(lambda x: x != '--', report_data_df['Conversions']))
+        clicks_not_null = list(filter(lambda x: x != '--', report_data_df['Clicks']))
+        total_dict['ConversionRate'] = f"{conversions_not_null * 100 / clicks_not_null:.2f}"
     except KeyError:
         pass
-    except (ZeroDivisionError, TypeError):
+    except ZeroDivisionError:
         total_dict['ConversionRate'] = '--'
 
     try:
-        total_dict['CostPerConversion'] = f"{total_dict['Cost'] / total_dict['Conversions']:.2f}"
+        conversions_not_null = list(filter(lambda x: x != '--', report_data_df['Conversions']))
+        cost_not_null = list(filter(lambda x: x != '--', report_data_df['Cost']))
+        total_dict['CostPerConversion'] = f"{cost_not_null / conversions_not_null:.2f}"
     except KeyError:
         pass
-    except (ZeroDivisionError, TypeError):
+    except ZeroDivisionError:
         total_dict['CostPerConversion'] = '--'
 
     return total_dict
