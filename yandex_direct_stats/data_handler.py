@@ -301,9 +301,11 @@ def compute_total_row_from_df_report(report_data_df: pd.DataFrame) -> dict[str, 
 
     try:
         conversions_not_null = list(filter(lambda x: x != '--', report_data_df['Conversions']))
-        total_dict['Conversions'] = [sum(list(map(int, conversions_not_null)))]
+        total_dict['Conversions'] = sum(list(map(int, conversions_not_null)))
     except KeyError:
         pass
+    except ValueError:
+        total_dict['Conversions'] = '0'
 
     try:
         total_dict['ConversionRate'] = f"{total_dict['Conversions'] * 100 / total_dict['Clicks']:.2f}"
