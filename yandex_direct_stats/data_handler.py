@@ -289,18 +289,14 @@ def compute_total_row_from_df_report(report_data_df: pd.DataFrame) -> dict[str, 
         pass
 
     try:
-        clicks_not_null = list(filter(lambda x: x != '--', report_data_df['Clicks']))
-        impressions_not_null = list(filter(lambda x: x != '--', report_data_df['Impressions']))
-        total_dict['Ctr'] = f"{clicks_not_null * 100 / impressions_not_null:.2f}"
+        total_dict['Ctr'] = f"{total_dict['Clicks'] * 100 / total_dict['Impressions']:.2f}"
     except KeyError:
         pass
     except ZeroDivisionError:
         total_dict['Ctr'] = '--'
 
     try:
-        cost_not_null = list(filter(lambda x: x != '--', report_data_df['Cost']))
-        clicks_not_null = list(filter(lambda x: x != '--', report_data_df['Clicks']))
-        total_dict['AvgCpc'] = f"{cost_not_null / clicks_not_null:.2f}"
+        total_dict['AvgCpc'] = f"{total_dict['Cost'] / total_dict['Clicks']:.2f}"
     except KeyError:
         pass
     except ZeroDivisionError:
@@ -315,18 +311,14 @@ def compute_total_row_from_df_report(report_data_df: pd.DataFrame) -> dict[str, 
         total_dict['Conversions'] = '0'
 
     try:
-        conversions_not_null = list(filter(lambda x: x != '--', report_data_df['Conversions']))
-        clicks_not_null = list(filter(lambda x: x != '--', report_data_df['Clicks']))
-        total_dict['ConversionRate'] = f"{conversions_not_null * 100 / clicks_not_null:.2f}"
+        total_dict['ConversionRate'] = f"{total_dict['Conversions'] * 100 / total_dict['Clicks']:.2f}"
     except KeyError:
         pass
     except ZeroDivisionError:
         total_dict['ConversionRate'] = '--'
 
     try:
-        conversions_not_null = list(filter(lambda x: x != '--', report_data_df['Conversions']))
-        cost_not_null = list(filter(lambda x: x != '--', report_data_df['Cost']))
-        total_dict['CostPerConversion'] = f"{cost_not_null / conversions_not_null:.2f}"
+        total_dict['CostPerConversion'] = f"{total_dict['Cost'] / total_dict['Conversions']:.2f}"
     except KeyError:
         pass
     except ZeroDivisionError:
