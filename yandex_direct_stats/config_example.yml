@@ -1,0 +1,22 @@
+---
+token: # Яндекс Директ токен
+yandex_login: # Логин клиента (пример: yandex-direct)
+client_name: # Имя клиента для именования файла отчета и для темы письма (example: Яндекс Директ)
+fields: # поля в таблице отчета
+  - CampaignName # название кампании
+  - Impressions # показы
+  - Clicks # клики
+  - Ctr # кол-во показов / кол-во кликов
+  - AvgCpc # средняя цена клика
+  - Conversions # количество достижения целей
+  - ConversionRate # кол-во конверсий / кол-во кликов
+  - CostPerConversion # цена за конверсию
+  - Cost # расходы
+date_range_api: LAST_7_DAYS # период отчета для запроса API, подробнее: https://yandex.ru/dev/direct/doc/reports/period.html
+date_range_int: 7 # период отчета в виде целого числа
+report_type: CAMPAIGN_PERFORMANCE_REPORT # название отчета
+order_by: CampaignName # столбец сортировки
+email_user: example@gmail.com # откуда отправить (только gmail, нужно разрешить доступ ненадежных приложений к аккаунту)
+email_password: # пароль от ящика-отправителя
+receiver: example@yahoo.com # кому отправить
+email_body: Добрый день. Отчет во вложении # текст письма
