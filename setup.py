@@ -3,7 +3,7 @@ from distutils.core import setup
 setup(
     name='yandex_direct_stats',
     packages=['yandex_direct_stats'],
-    version='0.684',
+    version='0.685',
     license='MIT',
     description='Some tools for perform Yandex Direct reports',
     author='Danila Panteleev',
