@@ -9,7 +9,7 @@ from openpyxl import Workbook
 from openpyxl.styles import Font
 from openpyxl.utils.dataframe import dataframe_to_rows
 
-from typing import List, Tuple, Union, Optional
+from typing import List, Tuple, Union, Optional, Dict
 from decimal import Decimal
 from gspread import Worksheet
 
@@ -261,7 +261,7 @@ def font_styling_workbook(report_workbook: Workbook) -> Workbook:
     return report_workbook
 
 
-def compute_total_row_from_df_report(report_data_df: pd.DataFrame) -> dict[str, Union[int, float]]:
+def compute_total_row_from_df_report(report_data_df: pd.DataFrame) -> Dict[str, Union[int, float]]:
     total_dict = {}
     for headline in report_data_df.columns:
         total_dict[headline] = ''
@@ -448,7 +448,7 @@ def add_report_headline_to_google_sheets(worksheet: Worksheet,
     return None
 
 
-def values_for_total_row(report_data: List[List[str]]) -> dict[str, Union[int, Decimal]]:
+def values_for_total_row(report_data: List[List[str]]) -> Dict[str, Union[int, Decimal]]:
     """
     Добавить итоговую строку, выделяет жирным, отрцентрировать в строке.
     Есть столбцы, зависящие от существования других столбцов.
@@ -507,3 +507,7 @@ def format_summary_row_in_google_sheets(worksheet: Worksheet,
         }
         )
     return None
+
+
+def merge_conversions(report_data: List[List[str]]) -> List[List[str]]:
+    pass
