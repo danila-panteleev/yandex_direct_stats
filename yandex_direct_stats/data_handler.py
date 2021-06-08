@@ -1,17 +1,19 @@
-import pandas as pd
-import datetime as dt
 import re
 from string import ascii_uppercase
+import datetime as dt
+from decimal import Decimal
+
+import numpy as np
+import pandas as pd
 
 from tapi_yandex_direct import YandexDirect
 
 from openpyxl import Workbook
 from openpyxl.styles import Font
 from openpyxl.utils.dataframe import dataframe_to_rows
-
-from typing import List, Tuple, Union, Optional, Dict
-from decimal import Decimal
 from gspread import Worksheet
+
+from typing import List, Tuple, Union, Dict, AnyStr
 
 
 def report_wrapper(login: str,
@@ -35,7 +37,8 @@ def report_wrapper(login: str,
                              order_by=order_by)
 
     report_data_df = report_data_to_dataframe(report_data)
-    report_data_df = add_total_row(report_data_df)
+    report_data_df = compute_total_row_from_df_report(report_data_df)
+    report_data_df = report_data_to_dataframe(report_data)
     report_data_df = str_to_numbers(report_data_df)
     report_data_df = rename_df_columns(report_data_df)
 
@@ -507,5 +510,30 @@ def format_summary_row_in_google_sheets(worksheet: Worksheet,
     return None
 
 
-def merge_conversions(report_data: List[List[str]]) -> List[List[str]]:
-    pass
+def merge_conversions(report_data: List[List[Union[AnyStr, int, float]]]) -> List[List[Union[AnyStr, int, float]]]:
+    if not list(filter(re.compile("Conversions_").match, [item for sublist in report_data for item in sublist])):
+        return report_data
+    df = pd.DataFrame(report_data[1:], columns=report_data[0])
+
+    df.Clicks = df.Clicks.astype('int64')
+    df.Impressions = df.Impressions.astype('int64')
+    df.Cost = df.Cost.astype('float64')
+
+    conversions_df = df.filter(regex=("Conversions")).copy()
+    conversions_df = conversions_df.replace('--', 0)
+    conversions_df['Conversions'] = conversions_df.filter(regex=("Conversions_")).sum(axis=1)
+
+    df = pd.concat([df, conversions_df], axis=1)
+
+    df = df.drop(columns=df.filter(regex='Conversions_').columns)
+    df = df.drop(columns=df.filter(regex='ConversionRate').columns)
+    df = df.drop(columns=df.filter(regex='CostPerC').columns)
+
+    df['ConversionRate'] = round(df.Conversions / df.Clicks, 4) * 100
+    df['CostPerConversion'] = round(df.Cost / df.Conversions, 2)
+
+    df = df.replace(np.inf, '--').replace(np.NaN, '--')
+
+    result = df.T.reset_index().values.transpose().tolist()
+
+    return result
