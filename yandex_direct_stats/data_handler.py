@@ -519,11 +519,12 @@ def merge_conversions(report_data: List[List[Union[AnyStr, int, float]]]) -> Lis
     df.Impressions = df.Impressions.astype('int64')
     df.Cost = df.Cost.astype('float64')
 
-    conversions_df = df.filter(regex=("Conversions")).copy()
-    conversions_df = conversions_df.replace('--', 0)
-    conversions_df['Conversions'] = conversions_df.filter(regex=("Conversions_")).sum(axis=1)
+    conv_df = df.filter(regex="Conversions").copy()
+    conv_df = conv_df.replace('--', 0)
+    conv_df = conv_df.astype('int64')
+    conv_df['Conversions'] = conv_df.filter(regex="Conversions_").sum(axis=1)
 
-    df = pd.concat([df, conversions_df], axis=1)
+    df = pd.concat([df, conv_df], axis=1)
 
     df = df.drop(columns=df.filter(regex='Conversions_').columns)
     df = df.drop(columns=df.filter(regex='ConversionRate').columns)
