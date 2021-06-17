@@ -549,7 +549,7 @@ def adgroup_groupby_labels_in_brackets(report_data: List[List[Union[AnyStr, int,
 
     labels = []
     for i in range(len(adgroups)):
-        label = re.search(r"\[.+\]}", adgroups[i])[0]
+        label = re.search(r"\[.+\]", adgroups[i])[0]
         label = label.replace('[', '').replace(']', '')
         labels.append(label)
 
