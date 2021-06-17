@@ -574,6 +574,6 @@ def adgroup_groupby_labels_in_brackets(report_data: List[List[Union[AnyStr, int,
 
     df = df.replace(np.inf, '--').replace(np.NaN, '--')
 
-    result = df.T.reset_index().values.transpose().tolist()
+    result = df.reset_index().T.values.tolist()
 
     return result
