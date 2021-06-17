@@ -538,3 +538,42 @@ def merge_conversions(report_data: List[List[Union[AnyStr, int, float]]]) -> Lis
     result = df.T.reset_index().values.transpose().tolist()
 
     return result
+
+
+def adgroup_groupby_labels_in_brackets(report_data: List[List[Union[AnyStr, int, float]]]) -> List[List[Union[AnyStr, int, float]]]:
+    """
+    label borders: '[]'
+    """
+    df = pd.DataFrame(report_data[1:], columns=report_data[0])
+    adgroups = df['AdGroupName']
+
+    labels = []
+    for i in range(len(adgroups)):
+        label = re.search(r"\[.+\]}", adgroups[i])[0]
+        label = label.replace('[', '').replace(']', '')
+        labels.append(label)
+
+    df['AdGroupName'] = labels
+    df = df.rename(columns={'AdGroupName': 'Label'})
+
+    df['Impressions'] = df['Impressions'].astype('int64')
+    df['Clicks'] = df['Clicks'].astype('int64')
+    df['Cost'] = df['Cost'].astype('float64')
+    df['Conversions'] = df['Conversions'].replace('--', 0).astype('int64')
+    df['ConversionRate'] = 0
+    df['CostPerConversion'] = 0
+    df['Ctr'] = 0
+    df['AvgCpc'] = 0
+
+    df = df.groupby('Label').sum()
+
+    df['Ctr'] = round(df.Clicks / df.Impressions * 100, 2)
+    df['AvgCpc'] = round(df.Cost / df.Clicks, 2)
+    df['ConversionRate'] = round(df.Conversions / df.Clicks * 100, 2)
+    df['CostPerConversion'] = round(df.Cost / df.Conversions, 2)
+
+    df = df.replace(np.inf, '--').replace(np.NaN, '--')
+
+    result = df.T.reset_index().values.transpose().tolist()
+
+    return result
